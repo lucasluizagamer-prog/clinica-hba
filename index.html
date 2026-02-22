@@ -16,6 +16,7 @@ input, select, textarea { width:100%; padding:8px; margin:5px 0 15px 0; }
 button.submit { background:#0a3d62; color:white; padding:10px; border:none; cursor:pointer; }
 .card { background:white; padding:15px; margin-bottom:15px; border-radius:5px; }
 footer { background:#0a3d62; color:white; text-align:center; padding:15px; margin-top:20px; }
+.verBtn { background:#1e5f8c; color:white; padding:5px 10px; border:none; cursor:pointer; }
 </style>
 </head>
 
@@ -82,10 +83,46 @@ footer { background:#0a3d62; color:white; text-align:center; padding:15px; margi
 <button class="submit" onclick="loginMedico()">Entrar</button>
 
 <div id="painelMedico" style="display:none;">
+
 <h3>Painel de Consultas</h3>
 <div id="listaConsultas"></div>
-</div>
 
+<hr>
+
+<h3>Criar Prontuário</h3>
+
+<input type="text" id="p_nome" placeholder="Nome do paciente">
+<input type="number" id="p_idade" placeholder="Idade">
+<input type="text" id="p_genero" placeholder="Gênero">
+<input type="number" id="p_peso" placeholder="Peso (kg)">
+<input type="number" id="p_altura" placeholder="Altura (cm)">
+<input type="text" id="p_tipoSangue" placeholder="Tipo sanguíneo">
+<input type="text" id="p_alergias" placeholder="Alergias">
+<input type="text" id="p_medicamentos" placeholder="Uso contínuo">
+<input type="text" id="p_doencas" placeholder="Doenças crônicas">
+
+<textarea id="p_sintomas" placeholder="Sintomas"></textarea>
+<textarea id="p_inicio" placeholder="Desde quando"></textarea>
+<textarea id="p_historico" placeholder="Histórico familiar"></textarea>
+
+<textarea id="p_exameFisico" placeholder="Exame físico"></textarea>
+
+<h4>Exames</h4>
+<textarea id="p_exames" placeholder="Exames realizados"></textarea>
+<textarea id="p_laudo" placeholder="Laudo"></textarea>
+
+<h4>Diagnóstico</h4>
+<textarea id="p_diagnostico" placeholder="Diagnóstico médico"></textarea>
+
+<textarea id="p_tratamento" placeholder="Tratamento"></textarea>
+<textarea id="p_conclusao" placeholder="Conclusão"></textarea>
+
+<button class="submit" onclick="salvarProntuario()">Salvar Prontuário</button>
+
+<h3>Prontuários Salvos</h3>
+<div id="listaProntuarios"></div>
+
+</div>
 </section>
 
 <footer>
@@ -94,112 +131,149 @@ footer { background:#0a3d62; color:white; text-align:center; padding:15px; margi
 
 <script>
 
-// Navegação
 function mostrar(secao){
 document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
 document.getElementById(secao).classList.add("active");
 }
 
-// Cadastro médico
 function cadastrarMedico(){
-let nome = document.getElementById("medNome").value;
-let email = document.getElementById("medEmail").value;
-let senha = document.getElementById("medSenha").value;
+let nome = medNome.value;
+let email = medEmail.value;
+let senha = medSenha.value;
 
-if(!nome || !email || !senha){
-alert("Preencha todos os campos.");
-return;
-}
+if(!nome || !email || !senha){ alert("Preencha todos os campos."); return; }
 
 let medicos = JSON.parse(localStorage.getItem("medicos")) || [];
-
-if(medicos.find(m => m.email === email)){
-alert("Email já cadastrado.");
-return;
-}
+if(medicos.find(m => m.email === email)){ alert("Email já cadastrado."); return; }
 
 medicos.push({nome,email,senha});
 localStorage.setItem("medicos", JSON.stringify(medicos));
-
 alert("Médico cadastrado com sucesso!");
 }
 
-// Login médico
 function loginMedico(){
-let email = document.getElementById("loginEmail").value;
-let senha = document.getElementById("loginSenha").value;
-
+let email = loginEmail.value;
+let senha = loginSenha.value;
 let medicos = JSON.parse(localStorage.getItem("medicos")) || [];
-
 let medico = medicos.find(m => m.email === email && m.senha === senha);
 
-if(!medico){
-alert("Credenciais inválidas.");
-return;
-}
+if(!medico){ alert("Credenciais inválidas."); return; }
 
 localStorage.setItem("medicoLogado", JSON.stringify(medico));
-document.getElementById("painelMedico").style.display = "block";
+painelMedico.style.display = "block";
 mostrarConsultas();
+mostrarProntuarios();
 }
 
-// Logout
 function logout(){
 localStorage.removeItem("medicoLogado");
-alert("Logout realizado.");
 location.reload();
 }
 
-// Salvar consulta
-document.getElementById("formConsulta").addEventListener("submit", function(e){
+formConsulta.addEventListener("submit", function(e){
 e.preventDefault();
-
 let consultas = JSON.parse(localStorage.getItem("consultas")) || [];
 
 consultas.push({
-nome: document.getElementById("nome").value,
-idade: document.getElementById("idade").value,
-contato: document.getElementById("contato").value,
-especialidade: document.getElementById("especialidade").value,
-data: document.getElementById("data").value,
-hora: document.getElementById("hora").value,
-obs: document.getElementById("obs").value
+nome: nome.value,
+idade: idade.value,
+especialidade: especialidade.value,
+data: data.value,
+hora: hora.value
 });
 
 localStorage.setItem("consultas", JSON.stringify(consultas));
-alert("Solicitação enviada com sucesso!");
+alert("Solicitação enviada!");
 this.reset();
 });
 
-// Mostrar consultas (apenas se médico logado)
 function mostrarConsultas(){
 let medicoLogado = JSON.parse(localStorage.getItem("medicoLogado"));
 if(!medicoLogado) return;
 
-let lista = document.getElementById("listaConsultas");
-lista.innerHTML = "";
-
+listaConsultas.innerHTML = "";
 let consultas = JSON.parse(localStorage.getItem("consultas")) || [];
 
 consultas.forEach(c => {
-lista.innerHTML += `
+listaConsultas.innerHTML += `
 <div class="card">
 <strong>${c.nome}</strong><br>
 Idade: ${c.idade}<br>
-Contato: ${c.contato}<br>
 Especialidade: ${c.especialidade}<br>
-Data: ${c.data} - ${c.hora}<br>
-Obs: ${c.obs}
+Data: ${c.data} - ${c.hora}
 </div>`;
 });
 }
 
-// Verifica sessão ao carregar
+function salvarProntuario(){
+let medicoLogado = JSON.parse(localStorage.getItem("medicoLogado"));
+if(!medicoLogado){ alert("Apenas médicos."); return; }
+
+let prontuarios = JSON.parse(localStorage.getItem("prontuarios")) || [];
+
+prontuarios.push({
+id: Date.now(),
+medico: medicoLogado.email,
+nome: p_nome.value,
+idade: p_idade.value,
+diagnostico: p_diagnostico.value,
+dados: {
+genero:p_genero.value,
+peso:p_peso.value,
+altura:p_altura.value,
+tipoSangue:p_tipoSangue.value,
+alergias:p_alergias.value,
+medicamentos:p_medicamentos.value,
+doencas:p_doencas.value,
+sintomas:p_sintomas.value,
+inicio:p_inicio.value,
+historico:p_historico.value,
+exameFisico:p_exameFisico.value,
+exames:p_exames.value,
+laudo:p_laudo.value,
+tratamento:p_tratamento.value,
+conclusao:p_conclusao.value
+}
+});
+
+localStorage.setItem("prontuarios", JSON.stringify(prontuarios));
+alert("Prontuário salvo!");
+mostrarProntuarios();
+}
+
+function mostrarProntuarios(){
+let medicoLogado = JSON.parse(localStorage.getItem("medicoLogado"));
+if(!medicoLogado) return;
+
+listaProntuarios.innerHTML = "";
+let prontuarios = JSON.parse(localStorage.getItem("prontuarios")) || [];
+
+prontuarios.filter(p=>p.medico===medicoLogado.email)
+.forEach(p=>{
+listaProntuarios.innerHTML += `
+<div class="card">
+<strong>${p.nome}</strong><br>
+${p.idade} ANOS<br>
+<strong>DIAGNÓSTICO:</strong> ${p.diagnostico}<br><br>
+<button class="verBtn" onclick="verProntuario(${p.id})">Ver Prontuário</button>
+</div>`;
+});
+}
+
+function verProntuario(id){
+let prontuarios = JSON.parse(localStorage.getItem("prontuarios")) || [];
+let p = prontuarios.find(p=>p.id===id);
+if(!p) return;
+
+alert(JSON.stringify(p, null, 2));
+}
+
 window.onload = function(){
 let medicoLogado = JSON.parse(localStorage.getItem("medicoLogado"));
 if(medicoLogado){
-document.getElementById("painelMedico").style.display = "block";
+painelMedico.style.display="block";
 mostrarConsultas();
+mostrarProntuarios();
 }
 };
 
