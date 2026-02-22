@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLÍNICA DAS CONSULTAS – HBA</title>
+
+<style>
+body { font-family: Arial, sans-serif; margin:0; background:#f2f5f9; }
+header { background:#0a3d62; color:white; padding:20px; text-align:center; }
+nav { background:#1e5f8c; padding:10px; text-align:center; }
+nav button { margin:5px; padding:8px 15px; border:none; background:white; cursor:pointer; font-weight:bold; }
+section { display:none; padding:30px; }
+.active { display:block; }
+input, select, textarea { width:100%; padding:8px; margin:5px 0 15px 0; }
+button.submit { background:#0a3d62; color:white; padding:10px; border:none; cursor:pointer; }
+.card { background:white; padding:15px; margin-bottom:15px; border-radius:5px; }
+footer { background:#0a3d62; color:white; text-align:center; padding:15px; margin-top:20px; }
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>CLÍNICA DAS CONSULTAS – HBA</h1>
+<p>Hospital Brasileiro Amil</p>
+</header>
+
+<nav>
+<button onclick="mostrar('home')">Início</button>
+<button onclick="mostrar('agendamento')">Agendar</button>
+<button onclick="mostrar('cadastroMedico')">Cadastro Médico</button>
+<button onclick="mostrar('loginMedico')">Login Médico</button>
+<button onclick="logout()">Logout</button>
+</nav>
+
+<section id="home" class="active">
+<h2>Bem-vindo</h2>
+<p>Atendimento estruturado com gestão clínica profissional.</p>
+<p><strong>Este site não substitui atendimento de emergência.</strong></p>
+</section>
+
+<section id="agendamento">
+<h2>Agendamento de Consulta</h2>
+
+<form id="formConsulta">
+<input type="text" id="nome" placeholder="Nome completo" required>
+<input type="number" id="idade" placeholder="Idade" required>
+<input type="text" id="contato" placeholder="Telefone/WhatsApp" required>
+
+<select id="especialidade" required>
+<option value="">Especialidade</option>
+<option>Clínica Médica</option>
+<option>Pneumologia</option>
+<option>Nutricionista</option>
+</select>
+
+<input type="date" id="data" required>
+<input type="time" id="hora" required>
+<textarea id="obs" placeholder="Observações"></textarea>
+
+<button type="submit" class="submit">Enviar Solicitação</button>
+</form>
+</section>
+
+<section id="cadastroMedico">
+<h2>Cadastro de Médico</h2>
+
+<input type="text" id="medNome" placeholder="Nome completo">
+<input type="email" id="medEmail" placeholder="Email">
+<input type="password" id="medSenha" placeholder="Senha">
+
+<button class="submit" onclick="cadastrarMedico()">Cadastrar</button>
+</section>
+
+<section id="loginMedico">
+<h2>Login Médico</h2>
+
+<input type="email" id="loginEmail" placeholder="Email">
+<input type="password" id="loginSenha" placeholder="Senha">
+
+<button class="submit" onclick="loginMedico()">Entrar</button>
+
+<div id="painelMedico" style="display:none;">
+<h3>Painel de Consultas</h3>
+<div id="listaConsultas"></div>
+</div>
+
+</section>
+
+<footer>
+<p>Proteção de dados conforme LGPD.</p>
+</footer>
+
+<script>
+
+// Navegação
+function mostrar(secao){
+document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+document.getElementById(secao).classList.add("active");
+}
+
+// Cadastro médico
+function cadastrarMedico(){
+let nome = document.getElementById("medNome").value;
+let email = document.getElementById("medEmail").value;
+let senha = document.getElementById("medSenha").value;
+
+if(!nome || !email || !senha){
+alert("Preencha todos os campos.");
+return;
+}
+
+let medicos = JSON.parse(localStorage.getItem("medicos")) || [];
+
+if(medicos.find(m => m.email === email)){
+alert("Email já cadastrado.");
+return;
+}
+
+medicos.push({nome,email,senha});
+localStorage.setItem("medicos", JSON.stringify(medicos));
+
+alert("Médico cadastrado com sucesso!");
+}
+
+// Login médico
+function loginMedico(){
+let email = document.getElementById("loginEmail").value;
+let senha = document.getElementById("loginSenha").value;
+
+let medicos = JSON.parse(localStorage.getItem("medicos")) || [];
+
+let medico = medicos.find(m => m.email === email && m.senha === senha);
+
+if(!medico){
+alert("Credenciais inválidas.");
+return;
+}
+
+localStorage.setItem("medicoLogado", JSON.stringify(medico));
+document.getElementById("painelMedico").style.display = "block";
+mostrarConsultas();
+}
+
+// Logout
+function logout(){
+localStorage.removeItem("medicoLogado");
+alert("Logout realizado.");
+location.reload();
+}
+
+// Salvar consulta
+document.getElementById("formConsulta").addEventListener("submit", function(e){
+e.preventDefault();
+
+let consultas = JSON.parse(localStorage.getItem("consultas")) || [];
+
+consultas.push({
+nome: document.getElementById("nome").value,
+idade: document.getElementById("idade").value,
+contato: document.getElementById("contato").value,
+especialidade: document.getElementById("especialidade").value,
+data: document.getElementById("data").value,
+hora: document.getElementById("hora").value,
+obs: document.getElementById("obs").value
+});
+
+localStorage.setItem("consultas", JSON.stringify(consultas));
+alert("Solicitação enviada com sucesso!");
+this.reset();
+});
+
+// Mostrar consultas (apenas se médico logado)
+function mostrarConsultas(){
+let medicoLogado = JSON.parse(localStorage.getItem("medicoLogado"));
+if(!medicoLogado) return;
+
+let lista = document.getElementById("listaConsultas");
+lista.innerHTML = "";
+
+let consultas = JSON.parse(localStorage.getItem("consultas")) || [];
+
+consultas.forEach(c => {
+lista.innerHTML += `
+<div class="card">
+<strong>${c.nome}</strong><br>
+Idade: ${c.idade}<br>
+Contato: ${c.contato}<br>
+Especialidade: ${c.especialidade}<br>
+Data: ${c.data} - ${c.hora}<br>
+Obs: ${c.obs}
+</div>`;
+});
+}
+
+// Verifica sessão ao carregar
+window.onload = function(){
+let medicoLogado = JSON.parse(localStorage.getItem("medicoLogado"));
+if(medicoLogado){
+document.getElementById("painelMedico").style.display = "block";
+mostrarConsultas();
+}
+};
+
+</script>
+
+</body>
+</html>
